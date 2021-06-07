@@ -3,9 +3,14 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.properties import StringProperty, NumericProperty
+from functools import partial
+from icecream import ic
 import speech_recognition as sr
+import telenium
+from kivy.clock import Clock
 
 Window.clearcolor = (0, 0, 0, 0.25)
+
 listener = sr.Recognizer()
 kv = '''
 Screen_Manager:
@@ -36,6 +41,7 @@ Screen_Manager:
             size_hint_y: None
             height: dp(60)
         Button:
+            id: save
             size_hint: 0.5, 0.2
             pos_hint: {'center_x': 0.5}
             text: 'Save'
@@ -76,6 +82,7 @@ class SpeechScreen(Screen):
     def parser(self):
         self.ids.speech.text.split('.')
     def calculate_time(self):
+        print("This button was pressed through automation")
         global app
         app.time = self.time_calc(self.ids.speech.text)
         print("This is the time: ", app.time)
@@ -129,5 +136,37 @@ class MemoryLeakApp(App):
         global app 
         app = self
         return Builder.load_string(kv)
+    def on_start(self):
+        Clock.schedule_once(self.testmodule, 3)
+    def testmodule(self, dt):
+        tc = "server.connect"
+        print("This is the start of the automated function tests")
+        print("The following are the test cases for the given text inputs")
+        ic("testcase1: Speech = empty string, WPM = 100")
+        ic("testcase2: Speech = 'Hello World', WPM = empty string")
+        ic("testcase3: Speech = empty string, WPM = empty string")
+        ic("testcase4: Speech = 'Hello World', WPM = '123@!ABDCGG'")
+        Clock.schedule_once(partial(self.numeric_checks, '', 100, 1))
+        Clock.schedule_once(partial(self.numeric_checks, 'Hello World', '', 2))
+        Clock.schedule_once(partial(self.numeric_checks, '', '', 3))
+        Clock.schedule_once(partial(self.numeric_checks, 'Hello World', '123@!ABDCGG', 4))
+        Clock.schedule_once(partial(self.numeric_checks, 'Hello World', '140', 5))
 
+    def numeric_checks(self, speech, wpm, testcase, dt):
+        if speech != '':
+            if wpm.isnumeric():
+                result = f'testcase{testcase} has passed'
+                ic(result)
+            else:
+                if wpm == '':
+                    result = f'WPM attribute cannot allow empty strings, testcase{testcase} failed'
+                    ic(result)
+                else:
+                    result = f'WPM attribute cannot allow non numeric strings, testcase{testcase} failed'
+                    ic(result)
+        else:
+            result = f'speech attribute cannot allow empty strings, testcase{testcase} failed'
+            ic(result)
+
+        
 MemoryLeakApp().run()
